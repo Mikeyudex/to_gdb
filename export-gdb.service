@@ -1,0 +1,15 @@
+[Unit]
+Description=Gunicorn instance to export GDB
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/opc/to_gdb
+Environment="PATH=/home/opc/to_gdb/env/bin"
+ExecStart=/home/opc/to_gdb/env/bin/gunicorn --workers 3 --bind 0.0.0.0:5502 -m 007 wsgi:app
+TimeoutSec=60
+
+[Install]
+WantedBy=multi-user.target
+
