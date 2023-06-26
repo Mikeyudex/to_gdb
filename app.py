@@ -2,8 +2,10 @@ from flask import request, Flask, jsonify, make_response
 from configs import PORT, ENV_SERVICE, APP
 from utils import deleteAllFiles
 from export_gdb import to_gdb
+from flask_cors import CORS
 
 app = Flask(__name__)
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app.route('/', methods = ['GET'])
 def home():
