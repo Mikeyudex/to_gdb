@@ -3,6 +3,7 @@ from configs import PORT, ENV_SERVICE, APP
 from utils import deleteAllFiles
 from export_gdb import to_gdb
 from flask_cors import CORS
+from logger_setup import logger
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
@@ -24,7 +25,7 @@ def receive_data():
         try:
             project = "EPSG:4326"
             req_body = request.get_json()
-            print('Body Recibido: ', req_body)
+            logger.info('Body Recibido: {}'.format(req_body))
             if "name" and "url_service" in req_body:
                 url_service = req_body["url_service"]
                 name_service = req_body["name"]
@@ -51,7 +52,7 @@ def receive_data():
                     ), 400)
 
         except Exception as error_response:
-            print(error_response)
+            logger.info(str(error_response))
             deleteAllFiles("temp")
             return make_response(jsonify({
                 'message': 'Ha ocurrido un error interno, por favor intente mas tarde.',

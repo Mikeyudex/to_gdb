@@ -1,10 +1,14 @@
+import base64
+import os
 from export_shp import to_shp
 from configs import URL_GEOPROCESO_REST
 import certifi
 import urllib3
 import uuid
+import zipfile
 from urllib.parse import quote, urlencode
 from upload_file import upload_file
+from logger_setup import logger
 
 def to_gdb(url_service: str, service_name: str, project: str):
     # URL del Feature Service
@@ -37,8 +41,16 @@ def request_service_create_gdb(service_name:str, path_shp:str):
             
             if "results" in data:
                 if "value" in data['results'][0]:
-                    gdb_base64 = data['results'][0]['value']
-                    response_file = upload_file(gdb_base64, f"{service_name}_{uuid.uuid4()}", ".zip")
+                    path_gdb = data['results'][0]['value']
+                    tmp_folder = "temp"
+                    name_file_zip = "{}_outputgdb_{}.zip".format(service_name, uuid.uuid4())
+                    zip_path = os.path.join(tmp_folder, name_file_zip)
+                    folder_gdb = os.path.dirname(path_gdb)
+                    compress_file(zip_path=zip_path, file_path=path_gdb, folder_gdb=folder_gdb)
+                    with open(zip_path, "rb") as file:
+                        zip_data = file.read()
+                    base64_data = base64.b64encode(zip_data).decode("utf-8")
+                    response_file = upload_file(base64_data, name_file_zip)
                     return response_file
                 else:
                     return {"success": False, "url_file": "", "error": "error al intentar crear GDB."}
@@ -50,8 +62,23 @@ def request_service_create_gdb(service_name:str, path_shp:str):
     except Exception as e:
         print(e)
         return {"success": False, "url_file": "", "error": "Error : error al invocar geoproceso."}
-         
-        
+
+
+def compress_file(zip_path, file_path, folder_gdb)-> str:
+    try:
+        logger.info('Path recibido para generar zip: {}'.format(file_path))
+        zip_fle = zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED)
+        for root, dirs, files in os.walk(folder_gdb):
+            if root == file_path:
+                for f in files:
+                    #arcpy.AddMessage("root folder: {} - file iterado {}".format(root, f))
+                    zip_fle.write(os.path.join(root, f))
+        logger.info("Archivo ZIP creado en: {}".format(zip_path))
+        return zip_path
+    except Exception as e:
+        logger.error("Error: {}".format(e))
+
+
 """ to_gdb(
     "https://arcgis-pliga-dev.is.arqbs.com/arcgis/rest/services/PIGA/PIGA_ALL_GEODB/MapServer/0/query",
     "pozos",

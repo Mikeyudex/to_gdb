@@ -3,12 +3,12 @@ import certifi
 import json
 from configs import URL_SERVICE_S3
 
-def upload_file(file_base64: str, filename: str, ext:str):
+def upload_file(file_base64: str, filename: str):
     try:
         params = {
             "namespace": "arqocidevsqadem",
             "bucketName": "pliga-bucket",
-            "fileName": filename + ext,
+            "fileName": filename,
             "phoenix": True,
             "urlExpirationTimeHours": "24",
             "fileBase64": file_base64,
